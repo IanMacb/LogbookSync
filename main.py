@@ -1,14 +1,23 @@
-#Write header
-file = open("Practice_table.csv", 'w')
-file.write("ForeFlight Logbook Import"+'\n\n'+"Flights Table"+'\n')
-file.write("Date,AircraftID,From,To,Route,TotalTime,PIC,SIC,Night,Solo,CrossCountry,Distance,DayTakeoffs,"
-           "DayLandingsFullStop,NightTakeoffs,NightLandingsFullStop,AllLandings,DualGiven,DualReceived,"
-           "SimulatedFlight,Person1"+'\n')
+import csv
 
-file.close()
-file = open("Practice_table.csv", 'r')
-print(file.read())
-file.close()
+START_DATE = "6/4/2022"
 
-file = open("Table_2163.csv", 'r')
-print(file.readline())
+
+with open('Table_5293.csv', 'r', newline='') as csvfile:
+    data = csv.DictReader(csvfile)
+    with open('Updater.csv', 'w', newline='') as updater:
+        updater.writelines('ForeFlight Logbook Import\n\nFlights Table\n')
+        good = csv.DictWriter(updater, fieldnames=['Date', 'AircraftID', 'From', 'To', 'Route', 'TotalTime', 'PIC', 'Night', 'CrossCountry','DayTakeoffs', 'DayLandingsFullStop', 'NightTakeoffs', 'NightLandingsFullStop', 'AllLandings', 'DualGiven', 'Person1'])
+        good.writeheader()
+        for i in data:
+            date = i['ï»¿"Flight Date"'].split()[0]
+            AircraftID = i['Aircraft']
+            if AircraftID != "":
+                AircraftID = AircraftID.split()[0]
+            if i['Activity Type'] == 'Intro Flight': Route = 'VC401'
+            else: Route = ''
+            Time = i['Total Flight Instruction']
+            Person = ' '.join(i['Customer 1 Name'].split()[:2]) + ';Student;'
+            good.writerow({'Date': date, 'AircraftID': AircraftID, 'From': 'KSFZ', 'To': 'KSFZ', 'Route': Route, 'TotalTime': Time, 'PIC': Time, 'DayTakeoffs': 1, 'DayLandingsFullStop': 1, 'AllLandings': 1, 'DualGiven': Time, 'Person1': Person})
+
+
