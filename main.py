@@ -1,7 +1,15 @@
 import csv
 import datetime
+import astral
+from astral.sun import sun
+
+
 
 START_DATE = datetime.date(2022, 6, 4)
+
+loc = astral.LocationInfo(name='SFZ', timezone='America/New_York', latitude=41.9208, longitude=-71.4914)
+s = sun(loc.observer, date=START_DATE, tzinfo=loc.timezone)
+#s['sunset']
 
 
 with open('Table_5293.csv', 'r', newline='') as csvfile:
@@ -12,7 +20,11 @@ with open('Table_5293.csv', 'r', newline='') as csvfile:
         good.writeheader()
         for i in data:
             d = i['ï»¿"Flight Date"'].split()[0].split('/')
+            t = i['ï»¿"Flight Date"'].split()[1:3]
+            print(t)
             Date = datetime.date(int(d[2]), int(d[0]), int(d[1]))
+            Time = datetime.time(int(t[0].split(':')[0]), int(t[0].split(':')[1]))
+            print(Date, Time)
             if Date > START_DATE:
                 AircraftID = i['Aircraft']
                 if AircraftID != "":
