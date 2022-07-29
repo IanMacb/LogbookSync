@@ -4,15 +4,15 @@ import astral
 from astral.sun import sun
 
 
-START_DATE = datetime.date(2010, 11, 8)
+START_DATE = datetime.date(2022, 6, 20)
 
 loc = astral.LocationInfo(name='SFZ', timezone='America/New_York', latitude=41.9208, longitude=-71.4914)
 s = sun(loc.observer, date=START_DATE, tzinfo=loc.timezone)
 
 
-with open('Table_8893.csv', 'r', newline='') as csvfile:
+with open('Table_7456.csv', 'r', newline='') as csvfile:
     data = csv.DictReader(csvfile)
-    with open('Updater.csv', 'w', newline='') as updater:
+    with open('Updater.xlsx', 'w', newline='') as updater:
         updater.writelines('ForeFlight Logbook Import\n\nFlights Table\n')
         good = csv.DictWriter(updater, fieldnames=['Date', 'AircraftID', 'From', 'To', 'Route', 'TotalTime', 'PIC', 'Night', 'CrossCountry','DayTakeoffs', 'DayLandingsFullStop', 'NightTakeoffs', 'NightLandingsFullStop', 'AllLandings', 'DualGiven', 'Person1'])
         good.writeheader()
@@ -35,7 +35,6 @@ with open('Table_8893.csv', 'r', newline='') as csvfile:
                 else: Route = ''
                 Time = i['Total Flight Time']
                 Night = 0
-                #FSP GIVES END TIME FOR SOME REASON
                 DayLandings = 1
                 NightLandings = 0
                 if DateTime > s['dusk']:
@@ -44,4 +43,4 @@ with open('Table_8893.csv', 'r', newline='') as csvfile:
                     NightLandings = 1
                 Landings = DayLandings + NightLandings
                 Person = ' '.join(i['Customer 1 Name'].split()[:2]) + ';Student;'
-                good.writerow({'Date': DateTime.date(), 'AircraftID': AircraftID, 'From': 'KSFZ', 'To': 'KSFZ', 'Route': Route, 'TotalTime': Time, 'PIC': Time, 'Night':Night, 'DayTakeoffs': DayLandings, 'DayLandingsFullStop': DayLandings, 'NightTakeoffs': NightLandings, 'NightLandingsFullStop': NightLandings, 'AllLandings': Landings, 'DualGiven': Time, 'Person1': Person})
+                good.writerow({'Date': DateTime.date(), 'AircraftID': AircraftID, 'From': 'KSFZ', 'To': 'KSFZ', 'Route': Route, 'TotalTime': float(Time), 'PIC': float(Time), 'Night':float(Night), 'DayTakeoffs': DayLandings, 'DayLandingsFullStop': DayLandings, 'NightTakeoffs': NightLandings, 'NightLandingsFullStop': NightLandings, 'AllLandings': Landings, 'DualGiven': float(Time), 'Person1': Person})
