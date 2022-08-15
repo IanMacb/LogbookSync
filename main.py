@@ -4,7 +4,7 @@ import astral
 from astral.sun import sun
 
 
-START_DATE = datetime.date(2010, 11, 8)
+START_DATE = datetime.date(2022, 7, 28)
 
 loc = astral.LocationInfo(name='SFZ', timezone='America/New_York', latitude=41.9208, longitude=-71.4914)
 s = sun(loc.observer, date=START_DATE, tzinfo=loc.timezone)
