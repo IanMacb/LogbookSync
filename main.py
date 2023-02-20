@@ -31,6 +31,7 @@ with open('Table.csv', 'r', newline='') as csvfile:
                 AircraftID = i['Aircraft']
                 if AircraftID != "":
                     AircraftID = AircraftID.split()[0]
+                Route = ''
                 Time = i['Total Flight Time']
                 Night = 0
                 #FSP GIVES END TIME FOR SOME REASON
