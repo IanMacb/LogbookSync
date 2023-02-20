@@ -4,7 +4,7 @@ import astral
 from astral.sun import sun
 
 
-START_DATE = datetime.date(2022, 7, 28)
+START_DATE = datetime.date(2023, 1, 27)
 
 loc = astral.LocationInfo(name='SFZ', timezone='America/New_York', latitude=41.9208, longitude=-71.4914)
 s = sun(loc.observer, date=START_DATE, tzinfo=loc.timezone)
@@ -31,8 +31,6 @@ with open('Table.csv', 'r', newline='') as csvfile:
                 AircraftID = i['Aircraft']
                 if AircraftID != "":
                     AircraftID = AircraftID.split()[0]
-                if i['Activity Type'] == 'Intro Flight': Route = 'VC401'
-                else: Route = ''
                 Time = i['Total Flight Time']
                 Night = 0
                 #FSP GIVES END TIME FOR SOME REASON
