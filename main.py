@@ -4,18 +4,25 @@ import astral
 from astral.sun import sun
 
 
-START_DATE = datetime.date(2023, 1, 27)
+START_DATE = datetime.date(2023, 4, 19)
 
 loc = astral.LocationInfo(name='SFZ', timezone='America/New_York', latitude=41.9208, longitude=-71.4914)
 s = sun(loc.observer, date=START_DATE, tzinfo=loc.timezone)
 
+entryDay = int(input('Last logbook entry day: '))
+entryMonth = int(input('Last logbook entry month: '))
+entryYear = int(input('Last logbook entry year: '))
+START_DATE = datetime.date(entryYear, entryMonth, entryDay)
 
 with open('Table.csv', 'r', newline='') as csvfile:
     data = csv.DictReader(csvfile)
     with open('Updater.csv', 'w', newline='') as updater:
-        updater.writelines('ForeFlight Logbook Import\n\nFlights Table\n')
-        good = csv.DictWriter(updater, fieldnames=['Date', 'AircraftID', 'From', 'To', 'Route', 'TotalTime', 'PIC', 'Night', 'CrossCountry','DayTakeoffs', 'DayLandingsFullStop', 'NightTakeoffs', 'NightLandingsFullStop', 'AllLandings', 'DualGiven', 'Person1'])
-        good.writeheader()
+        writer = csv.writer(updater)
+        writer.writerow(['ForeFlight Logbook Import','','','','','','','','','','','','','','',''])
+        writer.writerow(['','','','','','','','','','','','','','','',''])
+        writer.writerow(['Flights Table','','','','','','','','','','','','','','',''])
+        writer2 = csv.DictWriter(updater, fieldnames=['Date', 'AircraftID', 'From', 'To', 'Route', 'TotalTime', 'PIC', 'Night', 'CrossCountry', 'DayTakeoffs', 'DayLandingsFullStop', 'NightTakeoffs', 'NightLandingsFullStop', 'AllLandings', 'DualGiven', 'Person1'])
+        writer2.writeheader()
         for i in data:
             d = i['Start'].split()[0].split('/')
             t = i['Start'].split()[1].split(':')
@@ -43,4 +50,4 @@ with open('Table.csv', 'r', newline='') as csvfile:
                     NightLandings = 1
                 Landings = DayLandings + NightLandings
                 Person = ' '.join(i['Customer 1 Name'].split()[:2]) + ';Student;'
-                good.writerow({'Date': DateTime.date(), 'AircraftID': AircraftID, 'From': 'KSFZ', 'To': 'KSFZ', 'Route': Route, 'TotalTime': Time, 'PIC': Time, 'Night':Night, 'DayTakeoffs': DayLandings, 'DayLandingsFullStop': DayLandings, 'NightTakeoffs': NightLandings, 'NightLandingsFullStop': NightLandings, 'AllLandings': Landings, 'DualGiven': Time, 'Person1': Person})
+                writer2.writerow({'Date': DateTime.date(), 'AircraftID': AircraftID, 'From': 'KSFZ', 'To': 'KSFZ', 'Route': Route, 'TotalTime': Time, 'PIC': Time, 'Night':Night, 'DayTakeoffs': DayLandings, 'DayLandingsFullStop': DayLandings, 'NightTakeoffs': NightLandings, 'NightLandingsFullStop': NightLandings, 'AllLandings': Landings, 'DualGiven': Time, 'Person1': Person})
