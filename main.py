@@ -14,7 +14,9 @@ entryMonth = int(input('Last logbook entry month: '))
 entryYear = int(input('Last logbook entry year: '))
 START_DATE = datetime.date(entryYear, entryMonth, entryDay)
 
-with open('Table.csv', 'r', newline='') as csvfile:
+tableN = input('Table.CSV number: ')
+
+with open('Table_' + tableN + '.csv', 'r', newline='') as csvfile:
     data = csv.DictReader(csvfile)
     with open('Updater.csv', 'w', newline='') as updater:
         writer = csv.writer(updater)

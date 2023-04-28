@@ -1,0 +1,1 @@
+"Python" "C:\Users\Ian\PycharmProjects\LogbookSync\main.py"
