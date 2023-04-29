@@ -1,1 +1,1 @@
-"Python" "C:\Users\Ian\PycharmProjects\LogbookSync\main.py"
+Python main.py arg
