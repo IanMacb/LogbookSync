@@ -47,7 +47,9 @@ def main():
                     Time = i['Total Flight Time']
                     Night = 0
                     #FSP GIVES END TIME FOR SOME REASON
-                    DayLandings = 1
+                    DayLandings = 0
+                    if i['Activity Type'] == 'Intro Flight':
+                        DayLandings = 1
                     NightLandings = 0
                     if DateTime > s['dusk']:
                         Night = Time
