@@ -1,7 +1,10 @@
+from configparser import UNNAMED_SECTION
+
 import pymupdf
 import csv
 import easygui
 import sys
+import configparser
 
 HEADERS = ['Date',
            'AircraftID',
@@ -24,19 +27,18 @@ HEADERS = ['Date',
            'Person1',
            'PilotComments']
 
-MONTHS = {
-    'January': 1,
-    'February': 2,
-    'March': 3,
-    'April': 4,
-    'May': 5,
-    'June': 6,
-    'July': 7,
-    'August': 8,
-    'September': 9,
-    'October': 10,
-    'November': 11,
-    'December': 12,}
+MONTHS = {'January': 1,
+          'February': 2,
+          'March': 3,
+          'April': 4,
+          'May': 5,
+          'June': 6,
+          'July': 7,
+          'August': 8,
+          'September': 9,
+          'October': 10,
+          'November': 11,
+          'December': 12,}
 
 
 def file_open(file_name="", ask=False):
@@ -56,6 +58,8 @@ def file_open(file_name="", ask=False):
     elif 'Windows' in os:
         default_path = "C:\\Users\\%User%\\Downloads"
         splitter = "\\"
+    elif 'Mac' in os:
+        print("go fuk yourself")
 
 
     if ask:
@@ -77,10 +81,10 @@ def parse(text):
     header = header.split("\n")
     text = text.split("\n")
 
-    month = header[0]
-    month = month.split(" ")
-    month[0] = MONTHS[month[0]]
-    month = f"{month[1]}/{month[0]}"
+    year_month = header[0]
+    year_month = year_month.split(" ")
+    year_month[0] = MONTHS[year_month[0]]
+    year_month = f"{year_month[1]}/{year_month[0]}"
 
     data = []
     for i, line_text in enumerate(text):
@@ -122,17 +126,21 @@ def parse(text):
                           "night_landings": int(line_text[15])
                           })
 
-    return month, data_dict
+    return year_month, data_dict
 
 
-def file_save(data, month, file_name='FF_logbook_updater.csv'):
+def file_save(data, year_month, file_name='FF_logbook_updater.csv'):
     """
 
-    :param month:
+    :param year_month:
     :param data:
     :param file_name:
     :return:
     """
+    options = configparser.ConfigParser(allow_unnamed_section=True)
+    options.read_file(open("options.cfg"))
+
+
     with open(file_name, 'w', newline='') as file:
         #format file header
         length = len(HEADERS)
@@ -146,7 +154,7 @@ def file_save(data, month, file_name='FF_logbook_updater.csv'):
         #add each new line
         for flight_day in data:
 
-            Date = f"{month}/{flight_day["Date"]}"
+            Date = f"{year_month}/{flight_day["Date"]}"
 
             AircraftID = flight_day["AircraftID"]
             start = flight_day["start"]
@@ -159,9 +167,11 @@ def file_save(data, month, file_name='FF_logbook_updater.csv'):
 
             total_time = flight_day["total_time"]
 
-            #TODO configure for PIC/SIC time
-            PIC_time = 0.0
-            SIC_time = total_time
+            PIC_time = total_time
+            SIC_time = 0.0
+            if not options.getboolean(configparser.UNNAMED_SECTION, "PIC"):
+                SIC_time = total_time
+                PIC_time = 0.0
 
             night_time = flight_day["night_time"]
 
@@ -196,9 +206,9 @@ def file_save(data, month, file_name='FF_logbook_updater.csv'):
 
 
 def main():
-    text, file_path = file_open("/home/ian/Downloads/i.macbeth-jetasg.com-pilot-monthy-report.pdf")
-    month, data = parse(text)
-    file_save(data, month, f"{file_path}FF_logbook_updater.csv")
+    text, file_path = file_open("", True)
+    year_month, data = parse(text)
+    file_save(data, year_month, f"{file_path}FF_logbook_updater.csv")
 
 if __name__ == "__main__":
     main()
