@@ -7,7 +7,25 @@ import easygui
 
 def main():
 
-    HEADERS = ['Date', 'AircraftID', 'From', 'To', 'Route', 'TotalTime', 'PIC', 'Night', 'CrossCountry', 'DayTakeoffs', 'DayLandingsFullStop', 'NightTakeoffs', 'NightLandingsFullStop', 'AllLandings', 'ActualInstrument', 'Holds', 'DualGiven', 'Person1', 'PilotComments']
+    HEADERS = ['Date',
+               'AircraftID',
+               'From',
+               'To',
+               'Route',
+               'TotalTime',
+               'PIC',
+               'Night',
+               'CrossCountry',
+               'DayTakeoffs',
+               'DayLandingsFullStop',
+               'NightTakeoffs',
+               'NightLandingsFullStop',
+               'AllLandings',
+               'ActualInstrument',
+               'Holds',
+               'DualGiven',
+               'Person1',
+               'PilotComments']
     LENGTH = len(HEADERS)
 
     loc = astral.LocationInfo(name='SFZ', timezone='America/New_York', latitude=41.9208, longitude=-71.4914)
@@ -57,6 +75,20 @@ def main():
                     Landings = DayLandings + NightLandings
                     Person = i['Customer 1 Name']
                     Person = f'{Person};Student;'
-                    writer2.writerow({'Date': DateTime.date(), 'AircraftID': AircraftID, 'From': 'KSFZ', 'To': 'KSFZ', 'Route': Route, 'TotalTime': Time, 'PIC': Time, 'Night': Night, 'DayTakeoffs': DayLandings, 'DayLandingsFullStop': DayLandings, 'NightTakeoffs': NightLandings, 'NightLandingsFullStop': NightLandings, 'AllLandings': Landings, 'DualGiven': Time, 'Person1': Person})
+                    writer2.writerow({'Date': DateTime.date(),
+                                      'AircraftID': AircraftID,
+                                      'From': 'KSFZ',
+                                      'To': 'KSFZ',
+                                      'Route': Route,
+                                      'TotalTime': Time,
+                                      'PIC': Time,
+                                      'Night': Night,
+                                      'DayTakeoffs': DayLandings,
+                                      'DayLandingsFullStop': DayLandings,
+                                      'NightTakeoffs': NightLandings,
+                                      'NightLandingsFullStop': NightLandings,
+                                      'AllLandings': Landings,
+                                      'DualGiven': Time,
+                                      'Person1': Person})
 
 main()
