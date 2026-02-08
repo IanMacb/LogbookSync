@@ -42,12 +42,6 @@ MONTHS = {'January': 1,
 
 
 def file_open(file_name="", ask=False):
-    """
-
-    :param file_name:
-    :param ask:
-    :return:
-    """
 
     os = sys.platform
     default_path = ""
@@ -72,11 +66,7 @@ def file_open(file_name="", ask=False):
 
 
 def parse(text):
-    """
 
-    :param text:
-    :return:
-    """
     header, _, text = text.partition("T\nL\nT\nL\n")
     header = header.split("\n")
     text = text.split("\n")
@@ -101,11 +91,15 @@ def parse(text):
         data[i][1] = tail
 
         remarks = line_text[16].split(" - ")
-        start = remarks[0]
-        end = remarks[-1]
+        for j, entry in enumerate(remarks):
+            if len(entry) < 4:
+                remarks[j] = f"K{entry}"
+        start = remarks[0].upper()
+        end = remarks[-1].upper()
         route = ""
         if len(remarks) > 2:
             route = remarks[1:-1]
+        print(route)
         data[i].append(start)
         data[i].append(end)
         data[i].append(route)
@@ -130,13 +124,7 @@ def parse(text):
 
 
 def file_save(data, year_month, file_name='FF_logbook_updater.csv'):
-    """
 
-    :param year_month:
-    :param data:
-    :param file_name:
-    :return:
-    """
     options = configparser.ConfigParser(allow_unnamed_section=True)
     options.read_file(open("options.cfg"))
 
