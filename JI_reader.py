@@ -3,6 +3,7 @@ import csv
 import easygui
 import sys
 import configparser
+from pathlib import Path
 
 # TODO open and parse multiple files together
 
@@ -153,7 +154,11 @@ def file_save(data, year_month, file_name='FF_logbook_updater.csv'):
 
     #loads config file to 'options' object
     options = configparser.ConfigParser(allow_unnamed_section=True)
-    options.read_file(open("options.cfg"))
+
+    path = Path(__file__).absolute().parents[0]
+    print(path)
+
+    options.read_file(open(f"{path}/options.cfg"))
 
     with open(file_name, 'w', newline='') as file:
         #writes file header and column titles
