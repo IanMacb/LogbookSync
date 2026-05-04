@@ -3,6 +3,7 @@ import csv
 import easygui
 import sys
 import configparser
+import datetime
 from pathlib import Path
 
 # TODO open and parse multiple files together
@@ -42,14 +43,15 @@ MONTHS = {'January': 1,
           'December': 12,}
 
 class DataMonth:
-    def __init__(self, path, year, month, data):
+    def __init__(self, path, year_month, data):
         self.file_path = path
-        self.year = year
-        self.month = month
+        self.year = int(year_month.split("/")[0])
+        self.month = int(year_month.split("/")[1])
         self.data = data
-        #TODO date time for sorting
+        self.date = datetime.date(self.year, self.month, 1)
 
     def __str__(self):
+        #TODO fix
         return f"{self.year}/{self.month}"
 
 
@@ -58,11 +60,12 @@ class LogbookUpdater:
         self.data = []
         # determines OS and configures the path to the users downloads folder
         self.os = sys.platform
+        self.path = Path(__file__).absolute()
         self.default_path = ""
         self.splitter = ""
         if 'linux' in self.os:
             #TODO $USER
-            self.default_path = "/home/ian/Downloads/"
+            self.downloads_path = str(self.path.parents[2]) + '/Downloads'
             self.splitter = "/"
         elif 'Windows' in self.os:
             self.default_path = "C:\\Users\\%User%\\Downloads"
@@ -73,7 +76,7 @@ class LogbookUpdater:
 
         # TODO error handling
         # opens the file select GUI window and grabs all the text off the file
-        self.file_names = easygui.fileopenbox(default=self.default_path, multiple=True)
+        self.file_names = easygui.fileopenbox(default=self.downloads_path, multiple=True)
 
         # loads config file to 'options' object
         self.options = configparser.ConfigParser(allow_unnamed_section=True)
@@ -157,12 +160,13 @@ class LogbookUpdater:
             doc = pymupdf.open(f"{file_name}")
             text = doc.get_page_text(0)
             year_month, data_dict = self.parse_text(text)
-            log_month = DataMonth(file_path, year_month.split("/")[0], year_month.split("/")[1], data_dict)
+            log_month = DataMonth(file_path, year_month, data_dict)
             self.data.append(log_month)
+            self.data.sort(key=lambda x: x.date)
 
     def format_FF_file(self):
         # writes file header and column titles
-        with open(f"{self.default_path}FF_logbook_updater.csv", 'w', newline='') as file:
+        with open(f"{self.default_path}FF_logbook_updater.csv", 'w+', newline='') as file:
             length = len(HEADERS)
             writer = csv.writer(file)
             writer.writerow(['ForeFlight Logbook Import'] + [''] * (length - 1))
