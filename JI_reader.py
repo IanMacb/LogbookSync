@@ -41,106 +41,115 @@ MONTHS = {'January': 1,
           'November': 11,
           'December': 12,}
 
-
-def file_open(file_name="", ask=False):
-    """
-    Opens a PDF file and processes it using mymupdf
-    :param file_name: STR file name to open, default empty
-    :param ask: BOOL decision to prompt user via GUI
-    :return: STR file content, STR file path
-    """
-    #determines OS and configures the path to the users downloads folder
-    os = sys.platform
-    default_path = ""
-    splitter = ""
-    if 'linux' in os:
-        default_path = "/home/ian/Downloads/"
-        splitter = "/"
-    elif 'Windows' in os:
-        default_path = "C:\\Users\\%User%\\Downloads"
-        splitter = "\\"
-    elif 'Mac' in os:
-        #TODO
-        print("go fuk yourself")
-
-    #TODO error handling
-    #opens the file select GUI window and grabs all the text off the file
-    if ask:
-        file_name = easygui.fileopenbox(default=default_path)
-    file_path = file_name[:-len(file_name.split(f"{splitter}")[-1])]
-    doc = pymupdf.open(f"{file_name}")
-    text = doc.get_page_text(0)
-
-    return text, file_path
+class DataMonth:
+    def __init__(self, path, year, month, data):
+        self.file_path = path
+        self.year = year
+        self.month = month
+        self.data = data
 
 
-def parse(text):
-    """
-    strips useless stuff and organizes text from PDF
-    :param text: STR all the text converted from the PDF file
-    :return: STR year_month month and year in yyyy/mm
-        DICT data_dict organized data ready to be formatted to foreflight
-    """
+class LogbookUpdater:
+    def __init__(self):
+        self.data = []
+        # determines OS and configures the path to the users downloads folder
+        self.os = sys.platform
+        self.default_path = ""
+        self.splitter = ""
+        if 'linux' in self.os:
+            self.default_path = "/home/$USER/Downloads/"
+            self.splitter = "/"
+        elif 'Windows' in self.os:
+            self.default_path = "C:\\Users\\%User%\\Downloads"
+            self.splitter = "\\"
+        elif 'Mac' in self.os:
+            #TODO
+            print("go fuk yourself")
 
-    #removes the header and column titles
-    header, _, text = text.partition("T\nL\nT\nL\n")
-    header = header.split("\n")
-    text = text.split("\n")
+        # TODO error handling
+        # opens the file select GUI window and grabs all the text off the file
+        self.file_names = easygui.fileopenbox(default=self.default_path, multiple=True)
 
-    #reads the month and year from the report
-    year_month = header[0]
-    year_month = year_month.split(" ")
-    year_month[0] = MONTHS[year_month[0]]
-    year_month = f"{year_month[1]}/{year_month[0]}"
+    #for each file, open, get text, parse, organize
 
-    #filters through lines to only keep days with flight time (looks for part 91/135 label)
-    data = []
-    for i, line_text in enumerate(text):
-        if "135" in line_text or "91" in line_text:
-            data.append(text[i - 17:i])
+    def parse(self, text):
+        """
+        strips useless stuff and organizes text from PDF
+        :param text: STR all the text converted from the PDF file
+        :return: STR year_month month and year in yyyy/mm
+            DICT data_dict organized data ready to be formatted to foreflight
+        """
 
-    #loops through filtered flight days to cleen up tabs
-    for i, line_text in enumerate(data):
-        date = line_text[0].split("\xa0")
-        date = date[-1]
-        data[i][0] = date
+        # removes the header and column titles
+        header, _, text = text.partition("T\nL\nT\nL\n")
+        header = header.split("\n")
+        text = text.split("\n")
 
-        tail = line_text[1].split("\xa0")
-        tail = tail[-1]
-        data[i][1] = tail
+        # reads the month and year from the report
+        year_month = header[0]
+        year_month = year_month.split(" ")
+        year_month[0] = MONTHS[year_month[0]]
+        year_month = f"{year_month[1]}/{year_month[0]}"
 
-        #processes remarks column to start, end, and route. prefixes with 'K' if necessary
-        remarks = line_text[16].split(" - ")
-        for j, entry in enumerate(remarks):
-            if len(entry) < 4:
-                remarks[j] = f"K{entry}"
-        start = remarks[0].upper()
-        end = remarks[-1].upper()
-        route = ""
-        if len(remarks) > 2:
-            route = remarks[1:-1]
-        data[i].append(start)
-        data[i].append(end)
-        data[i].append(route)
+        # filters through lines to only keep days with flight time (looks for part 91/135 label)
+        data = []
+        for i, line_text in enumerate(text):
+            if "135" in line_text or "91" in line_text:
+                data.append(text[i - 17:i])
 
-    #organizes data into usable dict
-    data_dict = []
-    for i, line_text in enumerate(data):
-        data_dict.append({"Date": line_text[0],
-                          "AircraftID": line_text[1],
-                          "start": line_text[17],
-                          "end": line_text[18],
-                          "route": line_text[19],
-                          "total_time": float(line_text[7]),
-                          "night_time": float(line_text[8]),
-                          "IFR_time": float(line_text[9]),
-                          "day_takeoffs": int(line_text[12]),
-                          "day_landings": int(line_text[13]),
-                          "night_takeoffs": int(line_text[14]),
-                          "night_landings": int(line_text[15])
-                          })
+        # loops through filtered flight days to cleen up tabs
+        for i, line_text in enumerate(data):
+            date = line_text[0].split("\xa0")
+            date = date[-1]
+            data[i][0] = date
 
-    return year_month, data_dict
+            tail = line_text[1].split("\xa0")
+            tail = tail[-1]
+            data[i][1] = tail
+
+            # processes remarks column to start, end, and route. prefixes with 'K' if necessary
+            remarks = line_text[16].split(" - ")
+            for j, entry in enumerate(remarks):
+                if len(entry) < 4:
+                    remarks[j] = f"K{entry}"
+            start = remarks[0].upper()
+            end = remarks[-1].upper()
+            route = ""
+            if len(remarks) > 2:
+                route = remarks[1:-1]
+            data[i].append(start)
+            data[i].append(end)
+            data[i].append(route)
+
+        # organizes data into usable dict
+        data_dict = []
+        for i, line_text in enumerate(data):
+            data_dict.append({"Date": line_text[0],
+                              "AircraftID": line_text[1],
+                              "start": line_text[17],
+                              "end": line_text[18],
+                              "route": line_text[19],
+                              "total_time": float(line_text[7]),
+                              "night_time": float(line_text[8]),
+                              "IFR_time": float(line_text[9]),
+                              "day_takeoffs": int(line_text[12]),
+                              "day_landings": int(line_text[13]),
+                              "night_takeoffs": int(line_text[14]),
+                              "night_landings": int(line_text[15])
+                              })
+
+        return year_month, data_dict
+
+    def process(self):
+        self.data = []
+        for file_name in self.file_names:
+            file_path = file_name[:-len(file_name.split(f"{self.splitter}")[-1])]
+            doc = pymupdf.open(f"{file_name}")
+            text = doc.get_page_text(0)
+            year_month, data_dict = self.parse(text)
+            log_month = DataMonth(file_path, year_month[0], year_month[1], data_dict)
+            self.data.append(log_month)
+
 
 
 def file_save(data, year_month, file_name='FF_logbook_updater.csv'):
