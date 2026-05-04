@@ -47,6 +47,10 @@ class DataMonth:
         self.year = year
         self.month = month
         self.data = data
+        #TODO date time for sorting
+
+    def __str__(self):
+        return f"{self.year}/{self.month}"
 
 
 class LogbookUpdater:
@@ -57,7 +61,8 @@ class LogbookUpdater:
         self.default_path = ""
         self.splitter = ""
         if 'linux' in self.os:
-            self.default_path = "/home/$USER/Downloads/"
+            #TODO $USER
+            self.default_path = "/home/ian/Downloads/"
             self.splitter = "/"
         elif 'Windows' in self.os:
             self.default_path = "C:\\Users\\%User%\\Downloads"
@@ -70,9 +75,14 @@ class LogbookUpdater:
         # opens the file select GUI window and grabs all the text off the file
         self.file_names = easygui.fileopenbox(default=self.default_path, multiple=True)
 
+        # loads config file to 'options' object
+        self.options = configparser.ConfigParser(allow_unnamed_section=True)
+        path = Path(__file__).absolute().parents[0]
+        self.options.read_file(open(f"{path}/options.cfg"))
+
     #for each file, open, get text, parse, organize
 
-    def parse(self, text):
+    def parse_text(self, text):
         """
         strips useless stuff and organizes text from PDF
         :param text: STR all the text converted from the PDF file
@@ -89,7 +99,8 @@ class LogbookUpdater:
         year_month = header[0]
         year_month = year_month.split(" ")
         year_month[0] = MONTHS[year_month[0]]
-        year_month = f"{year_month[1]}/{year_month[0]}"
+        #TODO prefix with "0"
+        year_month = f"{year_month[1]}/"+f"{year_month[0]}"
 
         # filters through lines to only keep days with flight time (looks for part 91/135 label)
         data = []
@@ -140,115 +151,96 @@ class LogbookUpdater:
 
         return year_month, data_dict
 
-    def process(self):
-        self.data = []
+    def process_files(self):
         for file_name in self.file_names:
             file_path = file_name[:-len(file_name.split(f"{self.splitter}")[-1])]
             doc = pymupdf.open(f"{file_name}")
             text = doc.get_page_text(0)
-            year_month, data_dict = self.parse(text)
-            log_month = DataMonth(file_path, year_month[0], year_month[1], data_dict)
+            year_month, data_dict = self.parse_text(text)
+            log_month = DataMonth(file_path, year_month.split("/")[0], year_month.split("/")[1], data_dict)
             self.data.append(log_month)
 
+    def format_FF_file(self):
+        # writes file header and column titles
+        with open(f"{self.default_path}FF_logbook_updater.csv", 'w', newline='') as file:
+            length = len(HEADERS)
+            writer = csv.writer(file)
+            writer.writerow(['ForeFlight Logbook Import'] + [''] * (length - 1))
+            writer.writerow([''] * length)
+            writer.writerow(['Flights Table'] + [''] * (length - 1))
+            writer = csv.DictWriter(file, fieldnames=HEADERS)
+            writer.writeheader()
 
+            for log_month in self.data:
+                # add each new line
+                for flight_day in log_month.data:
 
-def file_save(data, year_month, file_name='FF_logbook_updater.csv'):
-    """
-    formats data into a CSV table and saves to file name in same directory as the PDF
-    :param data: DICT preprocessed data from PDF
-    :param year_month: STR month and year in yyyy/mm
-    :param file_name: STR file name, default 'FF_logbook_updater.csv'
-    :return:
-    """
+                    # Date
+                    Date = f"{log_month.year}/{log_month.month}/{flight_day["Date"]}"
 
-    #loads config file to 'options' object
-    options = configparser.ConfigParser(allow_unnamed_section=True)
+                    # Tail
+                    AircraftID = flight_day["AircraftID"]
 
-    path = Path(__file__).absolute().parents[0]
-    print(path)
+                    # Airport start and end
+                    start = flight_day["start"]
+                    end = flight_day["end"]
 
-    options.read_file(open(f"{path}/options.cfg"))
+                    # Route
+                    route = ""
+                    for i in flight_day["route"]:
+                        route = f"{route} {i}"
+                    route = route.strip(" ")
 
-    with open(file_name, 'w', newline='') as file:
-        #writes file header and column titles
-        length = len(HEADERS)
-        writer = csv.writer(file)
-        writer.writerow(['ForeFlight Logbook Import'] + [''] * (length - 1))
-        writer.writerow([''] * length)
-        writer.writerow(['Flights Table'] + [''] * (length - 1))
-        writer = csv.DictWriter(file, fieldnames=HEADERS)
-        writer.writeheader()
+                    # total time
+                    total_time = flight_day["total_time"]
 
-        #add each new line
-        for flight_day in data:
+                    # PIC or SIC time
+                    PIC_time = total_time
+                    SIC_time = 0.0
+                    if not self.options.getboolean(configparser.UNNAMED_SECTION, "PIC"):
+                        SIC_time = total_time
+                        PIC_time = 0.0
 
-            #Date
-            Date = f"{year_month}/{flight_day["Date"]}"
+                    # night time
+                    night_time = flight_day["night_time"]
 
-            #Tail
-            AircraftID = flight_day["AircraftID"]
+                    # cross country time
+                    cross_country_time = total_time
 
-            #Airport start and end
-            start = flight_day["start"]
-            end = flight_day["end"]
+                    # landings
+                    day_takeoffs = flight_day["day_takeoffs"]
+                    day_landings = flight_day["day_landings"]
+                    night_takeoffs = flight_day["night_takeoffs"]
+                    night_landings = flight_day["night_landings"]
+                    all_landings = day_landings + night_landings
 
-            #Route
-            route = ""
-            for i in flight_day["route"]:
-                route = f"{route} {i}"
-            route = route.strip(" ")
+                    # IFR time
+                    IFR_time = flight_day["IFR_time"]
 
-            #total time
-            total_time = flight_day["total_time"]
-
-            #PIC or SIC time
-            PIC_time = total_time
-            SIC_time = 0.0
-            if not options.getboolean(configparser.UNNAMED_SECTION, "PIC"):
-                SIC_time = total_time
-                PIC_time = 0.0
-
-            #night time
-            night_time = flight_day["night_time"]
-
-            #cross country tome
-            cross_country_time = total_time
-
-            #landings
-            day_takeoffs = flight_day["day_takeoffs"]
-            day_landings = flight_day["day_landings"]
-            night_takeoffs = flight_day["night_takeoffs"]
-            night_landings = flight_day["night_landings"]
-            all_landings = day_landings + night_landings
-
-            #IFR time
-            IFR_time = flight_day["IFR_time"]
-
-            #put it all in a new line on the CSV
-            writer.writerow({'Date': Date,
-                             'AircraftID': AircraftID,
-                             'From': start,
-                             'To': end,
-                             'Route': route,
-                             'TotalTime': total_time,
-                             'PIC': PIC_time,
-                             'SIC': SIC_time,
-                             'Night': night_time,
-                             'CrossCountry': cross_country_time,
-                             'Takeoff Day': day_takeoffs,
-                             'Landing Full-Stop Day': day_landings,
-                             'Takeoff Night': night_takeoffs,
-                             'Landing Full-Stop Night': night_landings,
-                             'AllLandings': all_landings,
-                             'ActualInstrument': IFR_time})
-
-        print("Review for accuracy!!!")
+                    # put it all in a new line on the CSV
+                    writer.writerow({'Date': Date,
+                                     'AircraftID': AircraftID,
+                                     'From': start,
+                                     'To': end,
+                                     'Route': route,
+                                     'TotalTime': total_time,
+                                     'PIC': PIC_time,
+                                     'SIC': SIC_time,
+                                     'Night': night_time,
+                                     'CrossCountry': cross_country_time,
+                                     'Takeoff Day': day_takeoffs,
+                                     'Landing Full-Stop Day': day_landings,
+                                     'Takeoff Night': night_takeoffs,
+                                     'Landing Full-Stop Night': night_landings,
+                                     'AllLandings': all_landings,
+                                     'ActualInstrument': IFR_time})
+        file.close()
 
 
 def main():
-    text, file_path = file_open("", True)
-    year_month, data = parse(text)
-    file_save(data, year_month, f"{file_path}FF_logbook_updater.csv")
+    updater = LogbookUpdater()
+    updater.process_files()
+    updater.format_FF_file()
 
 if __name__ == "__main__":
     main()
