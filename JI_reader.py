@@ -43,8 +43,7 @@ MONTHS = {'January': 1,
           'December': 12,}
 
 class DataMonth:
-    def __init__(self, path, year_month, data):
-        self.file_path = path
+    def __init__(self, year_month, data):
         self.year = int(year_month.split("/")[0])
         self.month = int(year_month.split("/")[1])
         self.data = data
@@ -58,30 +57,24 @@ class DataMonth:
 class LogbookUpdater:
     def __init__(self):
         self.data = []
+
         # determines OS and configures the path to the users downloads folder
         self.os = sys.platform
         self.path = Path(__file__).absolute()
-        self.default_path = ""
-        self.splitter = ""
         if 'linux' in self.os:
-            #TODO $USER
-            self.downloads_path = str(self.path.parents[2]) + '/Downloads'
-            self.splitter = "/"
-        elif 'Windows' in self.os:
-            self.default_path = "C:\\Users\\%User%\\Downloads"
-            self.splitter = "\\"
+            self.downloads_path = str(self.path.parents[2]) + '/Downloads/'
+        elif 'win' in self.os:
+            self.downloads_path = str(self.path.parents[2]) + '\\Downloads\\'
         elif 'Mac' in self.os:
             #TODO
-            print("go fuk yourself")
+            print("get fukt")
 
-        # TODO error handling
         # opens the file select GUI window and grabs all the text off the file
         self.file_names = easygui.fileopenbox(default=self.downloads_path, multiple=True)
 
         # loads config file to 'options' object
         self.options = configparser.ConfigParser(allow_unnamed_section=True)
-        path = Path(__file__).absolute().parents[0]
-        self.options.read_file(open(f"{path}/options.cfg"))
+        self.options.read_file(open(f"{self.path.parents[0]}/options.cfg"))
 
     #for each file, open, get text, parse, organize
 
@@ -102,8 +95,7 @@ class LogbookUpdater:
         year_month = header[0]
         year_month = year_month.split(" ")
         year_month[0] = MONTHS[year_month[0]]
-        #TODO prefix with "0"
-        year_month = f"{year_month[1]}/"+f"{year_month[0]}"
+        year_month = f"{year_month[1]}/{year_month[0]}"
 
         # filters through lines to only keep days with flight time (looks for part 91/135 label)
         data = []
@@ -111,7 +103,7 @@ class LogbookUpdater:
             if "135" in line_text or "91" in line_text:
                 data.append(text[i - 17:i])
 
-        # loops through filtered flight days to cleen up tabs
+        # loops through filtered flight days to clean up tabs
         for i, line_text in enumerate(data):
             date = line_text[0].split("\xa0")
             date = date[-1]
@@ -156,17 +148,16 @@ class LogbookUpdater:
 
     def process_files(self):
         for file_name in self.file_names:
-            file_path = file_name[:-len(file_name.split(f"{self.splitter}")[-1])]
             doc = pymupdf.open(f"{file_name}")
             text = doc.get_page_text(0)
             year_month, data_dict = self.parse_text(text)
-            log_month = DataMonth(file_path, year_month, data_dict)
+            log_month = DataMonth(year_month, data_dict)
             self.data.append(log_month)
             self.data.sort(key=lambda x: x.date)
 
     def format_FF_file(self):
         # writes file header and column titles
-        with open(f"{self.default_path}FF_logbook_updater.csv", 'w+', newline='') as file:
+        with open(f"{self.downloads_path}FF_logbook_updater.csv", 'w+', newline='') as file:
             length = len(HEADERS)
             writer = csv.writer(file)
             writer.writerow(['ForeFlight Logbook Import'] + [''] * (length - 1))
@@ -245,6 +236,7 @@ def main():
     updater = LogbookUpdater()
     updater.process_files()
     updater.format_FF_file()
+
 
 if __name__ == "__main__":
     main()
