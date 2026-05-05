@@ -3,7 +3,7 @@ import csv
 import easygui
 import sys
 import configparser
-import datetime
+from datetime import date
 from pathlib import Path
 
 # TODO open and parse multiple files together
@@ -47,7 +47,7 @@ class DataMonth:
         self.year = int(year_month.split("/")[0])
         self.month = int(year_month.split("/")[1])
         self.data = data
-        self.date = datetime.date(self.year, self.month, 1)
+        self.date = date(self.year, self.month, 1)
 
     def __str__(self):
         #TODO fix
