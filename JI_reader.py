@@ -6,8 +6,6 @@ import configparser
 from datetime import date
 from pathlib import Path
 
-# TODO open and parse multiple files together
-
 HEADERS = ['Date',
            'AircraftID',
            'From',
